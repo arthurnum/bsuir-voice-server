@@ -1,6 +1,14 @@
+use std::fs::File;
 use std::io::{prelude::*, BufReader};
 use std::net::TcpListener;
+use std::time::{SystemTime, UNIX_EPOCH};
 
+fn get_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+}
 
 fn main() {
     println!("Server start.");
@@ -17,6 +25,21 @@ fn main() {
                 let mut xbuf: Vec<u8> = vec![0; 8];
 
                 connection.read_exact(xbuf.as_mut_slice()).unwrap();
+
+                if xbuf[0] == 102 {
+                    println!("Get record request.");
+
+                    //1699386157.voice
+                    let mut file = File::open(format!("store/{}.voice", 1699386157)).unwrap();
+                    let mut data = Vec::new();
+                    file.read_to_end(&mut data).unwrap();
+                    println!("Data len: {}", data.len());
+
+                    connection.write_all(&data).unwrap();
+                    connection.flush().unwrap();
+
+                    continue;
+                }
 
                 let length: usize = bincode::deserialize(&xbuf).unwrap();
 
@@ -51,6 +74,9 @@ fn main() {
 
                 let su = bincode::deserialize::<Vec<i16>>(&record_buf).unwrap();
                 println!("Result len {:}", su.len());
+
+                let mut file = File::create(format!("store/{}.voice", get_timestamp())).unwrap();
+                file.write_all(&record_buf);
             }
         }
     }
