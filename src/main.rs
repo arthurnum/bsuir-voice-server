@@ -36,8 +36,10 @@ fn main() {
             }
         }
     }
+    records_list.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
 
-    let listener = TcpListener::bind("127.0.0.1:33666").unwrap();
+    let addr: String = String::from("127.0.0.1:33666");
+    let listener = TcpListener::bind(addr).unwrap();
 
     'main: loop {
         match listener.accept() {
@@ -74,7 +76,7 @@ fn main() {
                         println!("Result record len {:}", su.len());
                         println!();
 
-                        let mut file = File::create(format!("store/{}.voice", get_timestamp())).unwrap();
+                        let mut file = File::create(format!("store/{}.voice", cmd.timestamp)).unwrap();
                         file.write_all(&record_buf).unwrap();
                     },
 
