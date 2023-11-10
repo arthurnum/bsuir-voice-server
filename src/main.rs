@@ -1,13 +1,14 @@
+use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 mod command;
+mod voice_list_item;
 
-use command::Command;
-
-use crate::command::{CMD_POST_RECORD, CMD_GET_RECORD, COMMAND_BIN_SIZE};
+use crate::command::*;
+use crate::voice_list_item::VoiceListItem;
 
 fn get_timestamp() -> u64 {
     SystemTime::now()
@@ -18,6 +19,23 @@ fn get_timestamp() -> u64 {
 
 fn main() {
     println!("Server start.");
+
+    println!("Read store.");
+    let mut records_list: Vec<VoiceListItem> = Vec::with_capacity(128);
+    for entry in fs::read_dir("store").unwrap() {
+        let file = entry.unwrap();
+        let filename = file.file_name().into_string().unwrap();
+        match filename.find(".voice") {
+            None => {},
+            Some(ext) => {
+                println!("\t{filename:}");
+                let ts = str::parse::<u64>(&filename[0..ext]).unwrap();
+                records_list.push(
+                    VoiceListItem { timestamp: ts }
+                );
+            }
+        }
+    }
 
     let listener = TcpListener::bind("127.0.0.1:33666").unwrap();
 
@@ -34,6 +52,13 @@ fn main() {
                 println!("{:?}", cmd);
 
                 match cmd.id {
+                    CMD_INDEX => {
+                        println!("Index request.");
+                        let data = bincode::serialize(&records_list).unwrap();
+                        connection.write_all(&data).unwrap();
+                        connection.flush().unwrap();
+                    },
+
                     CMD_POST_RECORD => {
                         println!("Post record request.");
                         println!("Income length: {:}", cmd.data_len);
