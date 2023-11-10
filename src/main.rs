@@ -78,6 +78,10 @@ fn main() {
 
                         let mut file = File::create(format!("store/{}.voice", cmd.timestamp)).unwrap();
                         file.write_all(&record_buf).unwrap();
+
+                        records_list.push(
+                            VoiceListItem { timestamp: cmd.timestamp }
+                        );
                     },
 
                     CMD_GET_RECORD => {
