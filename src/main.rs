@@ -38,7 +38,7 @@ fn main() {
     }
     records_list.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
 
-    let addr: String = String::from("127.0.0.1:33666");
+    let addr: String = String::from("0.0.0.0:33666");
     let listener = TcpListener::bind(addr).unwrap();
 
     'main: loop {
